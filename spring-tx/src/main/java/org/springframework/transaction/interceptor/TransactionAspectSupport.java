@@ -286,22 +286,27 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 
 		if (txAttr == null || !(tm instanceof CallbackPreferringPlatformTransactionManager)) {
 			// Standard transaction demarcation with getTransaction and commit/rollback calls.
+			// 创建事务
 			TransactionInfo txInfo = createTransactionIfNecessary(tm, txAttr, joinpointIdentification);
 
 			Object retVal;
 			try {
 				// This is an around advice: Invoke the next interceptor in the chain.
 				// This will normally result in a target object being invoked.
+				// 执行业务逻辑
 				retVal = invocation.proceedWithInvocation();
 			}
 			catch (Throwable ex) {
 				// target invocation exception
+				// 调用目标方法异常，如果是目标的异常则回滚，如果不是目标的异常，不回滚直接提交
 				completeTransactionAfterThrowing(txInfo, ex);
 				throw ex;
 			}
 			finally {
+				//重新设置当前线程事务的信息
 				cleanupTransactionInfo(txInfo);
 			}
+			//正常提交事务
 			commitTransactionAfterReturning(txInfo);
 			return retVal;
 		}
@@ -473,6 +478,7 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 		TransactionStatus status = null;
 		if (txAttr != null) {
 			if (tm != null) {
+				//根据事务属性获取事务状态，并开启事务
 				status = tm.getTransaction(txAttr);
 			}
 			else {
@@ -549,6 +555,8 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 						"] after exception: " + ex);
 			}
 			if (txInfo.transactionAttribute != null && txInfo.transactionAttribute.rollbackOn(ex)) {
+				// txInfo.transactionAttribute.rollbackOn(ex) 这个代码的意思是
+				// 如果异常是指定的异常，则回滚，比如通过rollbackFor=Exception.class指定
 				try {
 					txInfo.getTransactionManager().rollback(txInfo.getTransactionStatus());
 				}
@@ -565,6 +573,7 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 			else {
 				// We don't roll back on this exception.
 				// Will still roll back if TransactionStatus.isRollbackOnly() is true.
+				// 异常不在指定范围内，所以不回滚异常，提交事务
 				try {
 					txInfo.getTransactionManager().commit(txInfo.getTransactionStatus());
 				}

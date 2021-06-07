@@ -711,6 +711,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 			return;
 		}
 
+		//处理事务提交
 		processCommit(defStatus);
 	}
 
@@ -726,8 +727,11 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 
 			try {
 				boolean unexpectedRollback = false;
+				//准备提交事务
 				prepareForCommit(status);
+				//提交之前出发的工作
 				triggerBeforeCommit(status);
+				//完成事务之前触发
 				triggerBeforeCompletion(status);
 				beforeCompletionInvoked = true;
 
@@ -743,6 +747,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 						logger.debug("Initiating transaction commit");
 					}
 					unexpectedRollback = status.isGlobalRollbackOnly();
+					//真正的提交事务
 					doCommit(status);
 				}
 				else if (isFailEarlyOnGlobalRollbackOnly()) {

@@ -278,6 +278,7 @@ public class DataSourceTransactionManager extends AbstractPlatformTransactionMan
 				if (logger.isDebugEnabled()) {
 					logger.debug("Switching JDBC Connection [" + con + "] to manual commit");
 				}
+				//通过connection设置手动提交事务，底层通过连接发送给数据库
 				con.setAutoCommit(false);
 			}
 
@@ -324,6 +325,8 @@ public class DataSourceTransactionManager extends AbstractPlatformTransactionMan
 			logger.debug("Committing JDBC transaction on Connection [" + con + "]");
 		}
 		try {
+			// 通过与数据库的连接提交事务，
+			// 这里就涉及到了不同的数据库连接池相关的代码了，已经超出Spring 的范畴，不用关心
 			con.commit();
 		}
 		catch (SQLException ex) {
